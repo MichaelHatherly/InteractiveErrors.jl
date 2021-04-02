@@ -152,7 +152,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
     result === nothing && return
 
     actions = [
-        "clipboard"  => () -> (clipboard(sprint(showerror, err.err, err.bt[1:toplevel])); nothing),
+        "clipboard"  => () -> (maybe_clipboard(sprint(showerror, err.err, err.bt[1:toplevel])); nothing),
         "print"      => () -> (showerror(io, err.err, err.bt[1:toplevel]); nothing),
         "stacktrace" => () -> clean,
         "exception"  => () -> err.err,
@@ -186,6 +186,15 @@ function explore(io::IO, err::CapturedError; interactive = true)
         isempty(output) || return NamedTuple{Tuple(first.(output))}(last.(output))
     end
     return nothing
+end
+
+# Just give up when there is no clipboard available.
+function maybe_clipboard(str)
+    try
+        clipboard(str)
+    catch err
+        @warn "Could not find a clipboard."
+    end
 end
 
 rootmodule(m::Module) = m === Base ? m : m === parentmodule(m) ? m : rootmodule(parentmodule(m))
