@@ -2,6 +2,8 @@
 
 Interactive error messages for the Julia REPL.
 
+[![asciicast](https://asciinema.org/a/404700.svg)](https://asciinema.org/a/404700)
+
 ## Installation
 
 Requires Julia `1.6+`.
