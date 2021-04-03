@@ -2,7 +2,7 @@
 
 Interactive error messages for the Julia REPL.
 
-[![asciicast](https://asciinema.org/a/404700.svg)](https://asciinema.org/a/404700)
+![demo](https://user-images.githubusercontent.com/6144086/113480599-fc0d6280-948c-11eb-9dd2-19fa3a85ff59.gif)
 
 ## Installation
 
