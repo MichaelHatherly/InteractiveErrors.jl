@@ -11,8 +11,7 @@ Requires Julia `1.6+`.
 ```
 julia> using Pkg
 
-julia> Pkg.add("https://github.com/MichaelHatherly/InteractiveErrors.jl")
-
+julia> Pkg.add(url="https://github.com/MichaelHatherly/InteractiveErrors.jl")
 ```
 
 Add `using InteractiveErrors` to your `startup.jl` file after `using Revise`.
