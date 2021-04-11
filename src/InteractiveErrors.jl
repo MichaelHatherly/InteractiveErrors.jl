@@ -163,16 +163,6 @@ function explore(io::IO, err::CapturedError; interactive = true)
     data = result.data
     extras = []
     if isa(data, StackFrameWrapper)
-        if isdefined(data.sf, :linfo) && has_cthulhu()
-            mi = data.sf.linfo
-            if isa(mi, Core.MethodInstance)
-                extras = [
-                    "ascend" => () -> ascend(mi),
-                    "descend" => () -> descend(mi),
-                ]
-                actions = vcat(extras, actions)
-            end
-        end
         file, line = data.sf.file, data.sf.line
         file = Base.find_source_file(string(file))
         if file !== nothing && isfile(file)
@@ -184,6 +174,20 @@ function explore(io::IO, err::CapturedError; interactive = true)
             ]
             has_debugger() && push!(extras, "breakpoint" => () -> breakpoint(file, line))
             actions = vcat(extras, actions)
+        end
+        if isdefined(data.sf, :linfo)
+            mi = data.sf.linfo
+            if isa(mi, Core.MethodInstance)
+                extras = []
+                if has_cthulhu()
+                    push!(extras, "ascend" => () -> ascend(mi))
+                    push!(extras, "descend" => () -> descend(mi))
+                end
+                if has_jet()
+                    push!(extras, "JET" => () -> report_call(mi))
+                end
+                actions = vcat(extras, actions)
+            end
         end
     end
 
@@ -310,6 +314,9 @@ descend(args...) = @warn "`import Cthulhu` to enable `descend` action."
 has_debugger(args...) = false
 breakpoint(args...) = @warn "`import Debugger` to enable `breakpoint` action."
 
+has_jet(args...) = false
+report_call(args...) = @warn "`import JET` to enable `report_call` action."
+
 function requires()
     @require Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f" begin
         has_cthulhu() = true
@@ -319,6 +326,17 @@ function requires()
     @require Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438" begin
         has_debugger() = true
         breakpoint(file::AbstractString, line::Integer) = Debugger.breakpoint(file, line)
+    end
+    @require JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b" begin
+        has_jet() = true
+        function report_call(mi::Core.MethodInstance)
+            func = Base.tuple_type_head(mi.specTypes).instance
+            sig = Base.tuple_type_tail(mi.specTypes)
+            result = JET.report_call(func, sig)
+            @info "Press return to continue."
+            readline()
+            return result
+        end
     end
 end
 

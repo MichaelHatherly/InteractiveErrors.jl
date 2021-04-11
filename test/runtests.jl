@@ -47,11 +47,13 @@ using Test, InteractiveErrors
 
     @test !IE.has_cthulhu()
     @test !IE.has_debugger()
+    @test !IE.has_jet()
 
-    using Cthulhu, Debugger
+    using Cthulhu, Debugger, JET
 
     @test IE.has_cthulhu()
     @test IE.has_debugger()
+    @test IE.has_jet()
 
     try
         sqrt(-1)
