@@ -4,22 +4,14 @@ module InteractiveErrors
 include("vendor/FoldingTrees/src/FoldingTrees.jl")
 using .FoldingTrees
 
-using REPL, REPL.TerminalMenus, InteractiveUtils, IterTools, Debugger
+using REPL, REPL.TerminalMenus, InteractiveUtils, IterTools, Requires
 
 export toggle, current_theme, set_theme!, reset_theme!, adjust_theme!
 
-struct CapturedError
-    err
-    bt
-end
 
-Base.show(io::IO, ce::CapturedError) = showerror(io, ce.err, ce.bt)
-
-struct StackFrameWrapper
-    sf::StackTraces.StackFrame
-    n::Int
-    StackFrameWrapper(tuple) = new(tuple...)
-end
+#
+# Themes.
+#
 
 const DEFAULT_THEME = (
     function_name   = (bold = true,),
@@ -56,6 +48,17 @@ get_theme(key) = get(NamedTuple, current_theme(), key)
 style(str; kws...) = sprint(io -> printstyled(io, str; kws...); context = :color => true)
 style(str, key::Symbol) = style(str; get_theme(key)...)
 
+
+#
+# Stackframe Wrapping.
+#
+
+struct StackFrameWrapper
+    sf::StackTraces.StackFrame
+    n::Int
+    StackFrameWrapper(tuple) = new(tuple...)
+end
+
 function Base.show(io::IO, s::StackFrameWrapper)
     func = style(s.sf.func, :function_name)
     file = rewrite_path(s.sf.file)
@@ -71,19 +74,17 @@ rewrite_stdlib(path::AbstractString) = replace(path, Regex("^" * Sys.STDLIB) => 
 rewrite_homedir(path::AbstractString) = replace(path, Regex("^" * homedir()) => "~")
 rewrite_path(path) = rewrite_homedir(rewrite_stdlib(string(path)))
 
-function _lines_around(s::StackFrameWrapper)
-    file, line = s.sf.file, s.sf.line
-    file = Base.find_source_file(string(file))
-    if file !== nothing && isfile(file)
-        lines = readlines(file)
-        range = get_theme(:line_range)
-        above = max(1, line - get(range, :before, 0))
-        below = min(line + get(range, :after, 5), length(lines))
-        return (line -> style(line, :file_contents)).(lines[above:below])
-    else
-        return String[]
-    end
+
+#
+# Explorer.
+#
+
+struct CapturedError
+    err
+    bt
 end
+
+Base.show(io::IO, ce::CapturedError) = showerror(io, ce.err, ce.bt)
 
 explore(err::CapturedError) = explore(stdout, err)
 
@@ -160,7 +161,18 @@ function explore(io::IO, err::CapturedError; interactive = true)
     ]
 
     data = result.data
+    extras = []
     if isa(data, StackFrameWrapper)
+        if isdefined(data.sf, :linfo) && has_cthulhu()
+            mi = data.sf.linfo
+            if isa(mi, Core.MethodInstance)
+                extras = [
+                    "ascend" => () -> ascend(mi),
+                    "descend" => () -> descend(mi),
+                ]
+                actions = vcat(extras, actions)
+            end
+        end
         file, line = data.sf.file, data.sf.line
         file = Base.find_source_file(string(file))
         if file !== nothing && isfile(file)
@@ -168,9 +180,9 @@ function explore(io::IO, err::CapturedError; interactive = true)
             extras = [
                 "edit" => () -> (edit(file, line); nothing),
                 "retry" => () -> true,
-                "breakpoint" => () -> (breakpoint(file, line); nothing),
                 "less" => () -> (less(file, line); nothing),
             ]
+            has_debugger() && push!(extras, "breakpoint" => () -> breakpoint(file, line))
             actions = vcat(extras, actions)
         end
     end
@@ -186,6 +198,20 @@ function explore(io::IO, err::CapturedError; interactive = true)
         isempty(output) || return NamedTuple{Tuple(first.(output))}(last.(output))
     end
     return nothing
+end
+
+function _lines_around(s::StackFrameWrapper)
+    file, line = s.sf.file, s.sf.line
+    file = Base.find_source_file(string(file))
+    if file !== nothing && isfile(file)
+        lines = readlines(file)
+        range = get_theme(:line_range)
+        above = max(1, line - get(range, :before, 0))
+        below = min(line + get(range, :after, 5), length(lines))
+        return (line -> style(line, :file_contents)).(lines[above:below])
+    else
+        return String[]
+    end
 end
 
 # Just give up when there is no clipboard available.
@@ -214,6 +240,11 @@ module_of(sf) =
         :unknown
 
 aggregate_modules(stacktrace) = IterTools.groupby(module_of, stacktrace)
+
+
+#
+# REPL hook.
+#
 
 const ENABLED = Ref(true)
 
@@ -249,7 +280,7 @@ function wrap_errors(expr)
     end
 end
 
-function __init__()
+function setup_repl()
     @async begin
         done = false
         for _ in 1:10
@@ -265,6 +296,40 @@ function __init__()
         end
         done || @warn "Could not start `InteractiveErrors` REPL hook."
     end
+end
+
+
+#
+# Requires.
+#
+
+has_cthulhu(args...) = false
+ascend(args...) = @warn "`import Cthulhu` to enable `ascend` action."
+descend(args...) = @warn "`import Cthulhu` to enable `descend` action."
+
+has_debugger(args...) = false
+breakpoint(args...) = @warn "`import Debugger` to enable `breakpoint` action."
+
+function requires()
+    @require Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f" begin
+        has_cthulhu() = true
+        ascend(mi::Core.MethodInstance) = Cthulhu.ascend(mi)
+        descend(mi::Core.MethodInstance) = Cthulhu.descend(mi)
+    end
+    @require Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438" begin
+        has_debugger() = true
+        breakpoint(file::AbstractString, line::Integer) = Debugger.breakpoint(file, line)
+    end
+end
+
+
+#
+# Module Initialisation.
+#
+
+function __init__()
+    setup_repl()
+    requires()
 end
 
 end # module

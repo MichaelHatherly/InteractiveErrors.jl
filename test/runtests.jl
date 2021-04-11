@@ -44,4 +44,28 @@ using Test, InteractiveErrors
         @test !isempty(nt.stacktrace)
         @test !isempty(nt.backtrace)
     end
+
+    @test !IE.has_cthulhu()
+    @test !IE.has_debugger()
+
+    using Cthulhu, Debugger
+
+    @test IE.has_cthulhu()
+    @test IE.has_debugger()
+
+    try
+        sqrt(-1)
+    catch err
+        ce = IE.CapturedError(err, catch_backtrace())
+        io = IOBuffer()
+        nt = IE.explore(io, ce; interactive = false)
+        str = String(take!(io))
+        @test !isempty(str)
+        @test contains(str, "DomainError")
+        @test isa(nt, NamedTuple)
+        @test collect(keys(nt)) == [:stacktrace, :exception, :backtrace]
+        @test isa(nt.exception, DomainError)
+        @test !isempty(nt.stacktrace)
+        @test !isempty(nt.backtrace)
+    end
 end
