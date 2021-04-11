@@ -170,9 +170,9 @@ function explore(io::IO, err::CapturedError; interactive = true)
             extras = [
                 "edit" => () -> (edit(file, line); nothing),
                 "retry" => () -> true,
-                "less" => () -> (less(file, line); nothing),
             ]
             has_debugger() && push!(extras, "breakpoint" => () -> breakpoint(file, line))
+            push!(extras, "less" => () -> (less(file, line); nothing))
             actions = vcat(extras, actions)
         end
         if isdefined(data.sf, :linfo)

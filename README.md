@@ -38,7 +38,10 @@ The second menu offers several actions that can be taken on the selected line.
 
 ```
 [press: d=done, a=all, n=none]
- > [ ] edit
+ • [ ] ascend
+   [ ] descend
+   [ ] JET
+   [ ] edit
    [ ] retry
    [ ] breakpoint
    [ ] less
@@ -51,9 +54,12 @@ The second menu offers several actions that can be taken on the selected line.
 
 Press `enter` to choose the currently selected line. More than one can be chosen:
 
+  - `ascend` (available if `Cthulhu` is loaded) calls `Cthulhu.ascend` on the selected method.
+  - `descend` (available if `Cthulhu` is loaded) calls `Cthulhu.descend` on the selected method.
+  - `JET` (available if `JET` is loaded) calls `JET.report_call` on the selected method.
   - `edit` opens default editor on the selected file and line.
   - `retry` runs the code entered in the REPL again.
-  - `breakpoint` sets a `Debugger.breakpoint` on the selected file and line.
+  - `breakpoint` (available if `Debugger` is loaded) sets a `Debugger.breakpoint` on the selected file and line.
   - `less` opens the pager on the selected file and line.
   - `clipboard` copies the normal Julia stacktrace to the clipboard. Useful for
     posting bug reports. Don't send the interactive printout as an error
