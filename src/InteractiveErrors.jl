@@ -191,7 +191,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
         end
     end
 
-    result = interactive ? request(MultiSelectMenu(first.(actions))) : collect(1:length(actions))
+    result = interactive ? request(MultiSelectMenu(first.(actions), charset=:unicode)) : collect(1:length(actions))
     choice = sort(collect(result))
     if !isempty(choice)
         output = []
