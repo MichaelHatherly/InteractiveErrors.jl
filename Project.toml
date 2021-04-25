@@ -1,7 +1,7 @@
 name = "InteractiveErrors"
 uuid = "6cff3a6f-7015-4b3b-b269-4b312a73b9bf"
 authors = ["Michael Hatherly <michaelhatherly@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
