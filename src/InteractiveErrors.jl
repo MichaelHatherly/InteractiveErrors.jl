@@ -30,6 +30,7 @@ const DEFAULT_THEME = (
     repeated_frames = (color = :red,),
     file_contents   = (color = :light_black,),
     line_range      = (before = 0, after = 5,),
+    charset         = :unicode,
 )
 const THEME = Ref{Any}(DEFAULT_THEME)
 
@@ -44,6 +45,7 @@ adjust_theme!(nt::NamedTuple) = set_theme!(merge(current_theme(), nt))
 adjust_theme!(; kws...) = adjust_theme!(_nt(kws))
 
 get_theme(key) = get(NamedTuple, current_theme(), key)
+get_theme(key, default) = get(current_theme(), key, default)
 
 style(str; kws...) = sprint(io -> printstyled(io, str; kws...); context = :color => true)
 style(str, key::Symbol) = style(str; get_theme(key)...)
@@ -191,7 +193,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
         end
     end
 
-    result = interactive ? request(MultiSelectMenu(first.(actions), charset=:unicode)) : collect(1:length(actions))
+    result = interactive ? request(MultiSelectMenu(first.(actions); charset = get_theme(:charset, :unicode))) : collect(1:length(actions))
     choice = sort(collect(result))
     if !isempty(choice)
         output = []

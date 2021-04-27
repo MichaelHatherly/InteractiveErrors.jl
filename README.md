@@ -95,7 +95,7 @@ The default theme is shown below:
 
 ```
 julia> pairs(current_theme())
-pairs(::NamedTuple) with 16 entries:
+pairs(::NamedTuple) with 17 entries:
   :function_name   => (bold = true,)
   :directory       => (color = :light_black,)
   :filename        => (color = :magenta, bold = true)
@@ -112,4 +112,5 @@ pairs(::NamedTuple) with 16 entries:
   :repeated_frames => (color = :red,)
   :file_contents   => (color = :light_black,)
   :line_range      => (before = 0, after = 5)
+  :charset         => :unicode
 ```
