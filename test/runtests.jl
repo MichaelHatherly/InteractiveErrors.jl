@@ -25,7 +25,6 @@ using Test, InteractiveErrors
     @test isfile(InteractiveErrors.find_source(package))
     @test startswith(InteractiveErrors.rewrite_path(build), "@stdlib")
     @test startswith(InteractiveErrors.rewrite_path(stdlib), "@stdlib")
-    @test startswith(InteractiveErrors.rewrite_path(package), "~")
 
     @test isa(IE.wrap_errors(:(1 + 1)), Expr)
     @test isa(IE.wrap_errors(:(toggle())), Expr)
