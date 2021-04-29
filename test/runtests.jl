@@ -17,6 +17,15 @@ using Test, InteractiveErrors
     @test !IE.is_from_core(InteractiveErrors)
     @test IE.is_from_core(Core)
 
+    build = joinpath(normpath(Sys.BUILD_STDLIB_PATH), "Test", "src", "Test.jl")
+    stdlib = joinpath(normpath(Sys.STDLIB), "Test", "src", "Test.jl")
+    package = @__FILE__
+    @test isfile(InteractiveErrors.find_source(build))
+    @test isfile(InteractiveErrors.find_source(stdlib))
+    @test isfile(InteractiveErrors.find_source(package))
+    @test startswith(InteractiveErrors.rewrite_path(build), "@stdlib")
+    @test startswith(InteractiveErrors.rewrite_path(stdlib), "@stdlib")
+
     @test isa(IE.wrap_errors(:(1 + 1)), Expr)
     @test isa(IE.wrap_errors(:(toggle())), Expr)
     toggle()

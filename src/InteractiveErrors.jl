@@ -72,10 +72,19 @@ function Base.show(io::IO, s::StackFrameWrapper)
     print(io, strip("$func $dir$file:$line $repeated"))
 end
 
-rewrite_stdlib(path::AbstractString) = replace(path, Regex("^" * Sys.STDLIB) => "@stdlib")
-rewrite_homedir(path::AbstractString) = replace(path, Regex("^" * homedir()) => "~")
-rewrite_path(path) = rewrite_homedir(rewrite_stdlib(string(path)))
+function rewrite_path(path)
+    fn(path, replacer) = replace(String(path), replacer; count = 1)
+    path = fn(path, normpath(Sys.BUILD_STDLIB_PATH) => "@stdlib")
+    path = fn(path, normpath(Sys.STDLIB) => "@stdlib")
+    path = fn(path, homedir() => "~")
+    return path
+end
 
+function find_source(file)
+    # Binary versions of Julia have the wrong stdlib path, fix it.
+    file = replace(string(file), normpath(Sys.BUILD_STDLIB_PATH) => Sys.STDLIB; count = 1)
+    return Base.find_source_file(file)
+end
 
 #
 # Explorer.
@@ -166,7 +175,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
     extras = []
     if isa(data, StackFrameWrapper)
         file, line = data.sf.file, data.sf.line
-        file = Base.find_source_file(string(file))
+        file = find_source(file)
         if file !== nothing && isfile(file)
             file, line
             extras = [
@@ -208,7 +217,7 @@ end
 
 function _lines_around(s::StackFrameWrapper)
     file, line = s.sf.file, s.sf.line
-    file = Base.find_source_file(string(file))
+    file = find_source(file)
     if file !== nothing && isfile(file)
         lines = readlines(file)
         range = get_theme(:line_range)
