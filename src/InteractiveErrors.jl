@@ -270,11 +270,13 @@ is_toggle_expr(expr) = Meta.isexpr(expr, :call, 1) && expr.args[1] === :toggle
 is_retry(::Nothing) = false
 is_retry(nt::NamedTuple) = haskey(nt, :retry) && nt.retry === true
 
-const OUTPUT = gensym("output")
+maybe_retry(out, expr) = is_retry(out) ? Core.eval(Main, _ast_transforms(expr)) : out
 
-function _ast_transforms(ast; backend = Base.active_repl_backend)
-    for xf in backend.ast_transforms
-        ast = Base.invokelatest(xf, ast)
+function _ast_transforms(ast)
+    if isdefined(Base, :active_repl_backend)
+        for xf in Base.active_repl_backend.ast_transforms
+            ast = Base.invokelatest(xf, ast)
+        end
     end
     return ast
 end
@@ -285,9 +287,7 @@ function wrap_errors(expr)
             try
                 $(Expr(:toplevel, expr))
             catch e
-                global err = $(CapturedError)(e, catch_backtrace())
-                out = $(explore)(err)
-                $(is_retry)(out) ? Core.eval(Main, $(_ast_transforms)($(Expr(:quote, expr)))) : out
+                $(maybe_retry)($(explore)(($CapturedError)(e, catch_backtrace())), $(Expr(:quote, expr)))
             end
         end
     else
