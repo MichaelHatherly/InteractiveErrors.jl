@@ -73,6 +73,19 @@ Press `enter` to choose the currently selected line. More than one can be chosen
 More than one action can be selected at once. A common combination is `edit`
 and `retry`. Press `d` (for done) once you're finished making your choices.
 
+## Optional Packages
+
+Additional features are available when certain packages are loaded within the REPL session.
+
+  - `Cthulhu`, provides `ascend` and `descend` options on selected method.
+  - `Debugger`, provides `breakpoint` on selected method.
+  - `JET`, provides `report_call` on selected method.
+  - `JuliaFormatter`, provides syntax formatting for method signatures.
+  - `OhMyREPL`, provides syntax highlighting for source code and method signatures.
+
+Depending on the maintenance burden of compatibility with these packages they
+may in future versions become direct dependencies instead of using `Requires`.
+
 ## Themes
 
 Most of the default coloring in the stack-tree can be adjusted to the user's
@@ -94,8 +107,7 @@ liking via a simple theming system.
 The default theme is shown below:
 
 ```
-julia> pairs(current_theme())
-pairs(::NamedTuple) with 17 entries:
+pairs(::NamedTuple) with 19 entries:
   :function_name   => (bold = true,)
   :directory       => (color = :light_black,)
   :filename        => (color = :magenta, bold = true)
@@ -111,6 +123,8 @@ pairs(::NamedTuple) with 17 entries:
   :toplevel_frames => (color = :light_black,)
   :repeated_frames => (color = :red,)
   :file_contents   => (color = :light_black,)
+  :signature       => (color = :light_black, format = true, highlight = true)
+  :source          => (color = :normal, bold = true, highlight = true)
   :line_range      => (before = 0, after = 5)
   :charset         => :unicode
 ```
