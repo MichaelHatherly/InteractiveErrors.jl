@@ -38,6 +38,9 @@ using Test, InteractiveErrors
     @test IE.style("func", :function_name) == "\e[33mfunc\e[39m"
     @test isa(IE.current_theme(), NamedTuple)
 
+    @test IE.maybe_retry((; retry = true), :(true))
+    @test IE.maybe_retry((; retry = false), :(true)) == (; retry = false)
+
     try
         div(1, 0)
     catch err
