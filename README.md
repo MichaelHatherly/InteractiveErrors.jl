@@ -20,7 +20,9 @@ If you don't have that installed yet you should install it.
 ## Usage
 
 Just start using your REPL normally. Once you hit an error you'll be presented
-with an interactive tree representing your stacktrace which you can explore.
+with an interactive tree representing your stacktrace which you can explore. To
+turn interactive errors off and return to using normal stacktraces call
+`toggle()`. Call `toggle()` again to turn it back on.
 
 Press `up` and `down` arrows to move through the stacktrace. Press `space` to
 fold or unfold the currently selected line. A `+` will appear on folded lines.

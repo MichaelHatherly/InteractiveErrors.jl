@@ -301,6 +301,9 @@ aggregate_modules(stacktrace) = IterTools.groupby(module_of, stacktrace)
 
 const ENABLED = Ref(true)
 
+"""
+Turn interactive errors on or off.
+"""
 toggle() = ENABLED[] = !ENABLED[]
 
 is_toggle_expr(expr) = Meta.isexpr(expr, :call, 1) && expr.args[1] === :toggle
