@@ -60,12 +60,16 @@ using Test, InteractiveErrors
     @test !IE.has_cthulhu()
     @test !IE.has_debugger()
     @test !IE.has_jet()
+    @test !IE.has_ohmyrepl()
+    @test !IE.has_juliaformatter()
 
-    using Cthulhu, Debugger, JET
+    using Cthulhu, Debugger, JET, OhMyREPL, JuliaFormatter
 
     @test IE.has_cthulhu()
     @test IE.has_debugger()
     @test IE.has_jet()
+    @test IE.has_ohmyrepl()
+    @test IE.has_juliaformatter()
 
     try
         sqrt(-1)

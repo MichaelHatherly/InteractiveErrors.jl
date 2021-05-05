@@ -29,6 +29,8 @@ const DEFAULT_THEME = (
     toplevel_frames = (color = :light_black,),
     repeated_frames = (color = :red,),
     file_contents   = (color = :light_black,),
+    signature       = (color = :light_black, format = true, highlight = true),
+    source          = (color = :normal, bold = true, highlight = true),
     line_range      = (before = 0, after = 5,),
     charset         = :unicode,
 )
@@ -47,7 +49,15 @@ adjust_theme!(; kws...) = adjust_theme!(_nt(kws))
 get_theme(key) = get(NamedTuple, current_theme(), key)
 get_theme(key, default) = get(current_theme(), key, default)
 
-style(str; kws...) = sprint(io -> printstyled(io, str; kws...); context = :color => true)
+function style(str; kws...)
+    sprint(; context = :color => true) do io
+        printstyled(
+            io, str;
+            bold = get(kws, :bold, false),
+            color = get(kws, :color, :normal),
+        )
+    end
+end
 style(str, key::Symbol) = style(str; get_theme(key)...)
 
 
@@ -135,10 +145,28 @@ function explore(io::IO, err::CapturedError; interactive = true)
                 node = Node{Any}(name, root_node)
                 for frame in frame_group
                     current = Node{Any}(frame, node)
-                    for line in _lines_around(frame)
-                        Node{Any}(line, current)
-                    end
                     fold!(current)
+                    # Formatted signature for the frame:
+                    if !StackTraces.is_top_level_frame(frame.sf)
+                        let lines = _formatted_signature(frame)
+                            if !isempty(lines)
+                                sig = Node{Any}(style("signature", :signature), current)
+                                fold!(sig)
+                                for line in lines
+                                    Node{Any}(line, sig)
+                                end
+                            end
+                        end
+                    end
+                    # Source code for the frame:
+                    let lines = _lines_around(frame)
+                        if !isempty(lines)
+                            src = Node{Any}(style("source", :source), current)
+                            for line in lines
+                                Node{Any}(line, src)
+                            end
+                        end
+                    end
                 end
                 # Hide any of the following by default:
                 if m in (:inlined, :toplevel) || is_from_stdlib(m) || is_from_base(m) || is_from_core(m) || fold
@@ -223,10 +251,20 @@ function _lines_around(s::StackFrameWrapper)
         range = get_theme(:line_range)
         above = max(1, line - get(range, :before, 0))
         below = min(line + get(range, :after, 5), length(lines))
-        return (line -> style(line, :file_contents)).(lines[above:below])
+        highlighter = get(get_theme(:source), :highlight, true) === true ? highlight : s -> style(s, :file_contents)
+        return highlighter.(lines[above:below])
     else
         return String[]
     end
+end
+
+function _formatted_signature(s::StackFrameWrapper)
+    str = String(rsplit(string(s.sf), " at "; limit = 2)[1])
+    str = replace(str, "#unused#" => "")
+    formatter = get(get_theme(:signature), :format, true) === true ? format_julia_source : identity
+    highlighter = get(get_theme(:signature), :highlight, true) === true ? highlight : s -> style(s, :file_contents)
+    fmt = highlighter(formatter(str))
+    return collect(eachline(IOBuffer(fmt)))
 end
 
 # Just give up when there is no clipboard available.
@@ -328,6 +366,12 @@ breakpoint(args...) = @warn "`import Debugger` to enable `breakpoint` action."
 has_jet(args...) = false
 report_call(args...) = @warn "`import JET` to enable `report_call` action."
 
+has_juliaformatter(args...) = false
+format_julia_source(source) = source
+
+has_ohmyrepl(args...) = false
+highlight(source) = style(source, :file_contents)
+
 function requires()
     @require Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f" begin
         has_cthulhu() = true
@@ -347,6 +391,26 @@ function requires()
             @info "Press return to continue."
             readline()
             return result
+        end
+    end
+    @require JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899" begin
+        has_juliaformatter() = true
+        format_julia_source(source::String) = try JuliaFormatter.format_text(source); catch err; source; end
+    end
+    @require OhMyREPL = "5fb14364-9ced-5910-84b2-373655c76a03" begin
+        has_ohmyrepl() = true
+        function highlight(source::String)
+            O = OhMyREPL
+            tokens = collect(O.tokenize(source))
+            crayons = fill(O.Crayon(), length(tokens))
+            O.Passes.SyntaxHighlighter.SYNTAX_HIGHLIGHTER_SETTINGS(crayons, tokens, 0)
+            io = IOBuffer()
+            for (token, crayon) in zip(tokens, crayons)
+                print(io, crayon)
+                print(io, O.untokenize(token))
+                print(io, O.Crayon(reset = true))
+            end
+            return String(take!(io))
         end
     end
 end
