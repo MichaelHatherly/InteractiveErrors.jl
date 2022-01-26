@@ -5,6 +5,7 @@ version = "0.1.4"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+FoldingTrees = "1eca21be-9b9b-4ed8-839a-6d8ae26b1781"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -12,6 +13,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
 AbstractTrees = "0.3"
+FoldingTrees = "1.1"
 IterTools = "1"
 Requires = "1"
 julia = "1.6"
