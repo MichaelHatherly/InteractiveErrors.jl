@@ -12,7 +12,7 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
-AbstractTrees = "0.3"
+AbstractTrees = "0.3, 0.4"
 FoldingTrees = "1.1"
 IterTools = "1"
 Requires = "1"
