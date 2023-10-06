@@ -4,7 +4,7 @@ using FoldingTrees
 
 using REPL, REPL.TerminalMenus, InteractiveUtils, IterTools
 
-import PackageExtensionCompat
+import PackageExtensionCompat, PrecompileTools
 
 export toggle, current_theme, set_theme!, reset_theme!, adjust_theme!
 
@@ -389,6 +389,14 @@ highlight(source) = style(source, :file_contents)
 function __init__()
     setup_repl()
     PackageExtensionCompat.@require_extensions
+end
+
+PrecompileTools.@compile_workload begin
+    try
+        div(1, 0)
+    catch error
+        explore(IOBuffer(), CapturedError(error, catch_backtrace()); interactive = false)
+    end
 end
 
 end # module
