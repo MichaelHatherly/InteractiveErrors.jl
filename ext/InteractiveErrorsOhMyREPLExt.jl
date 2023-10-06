@@ -2,6 +2,7 @@ module InteractiveErrorsOhMyREPLExt
 
 import OhMyREPL
 import InteractiveErrors
+import PrecompileTools
 
 InteractiveErrors.has_ohmyrepl() = true
 
@@ -17,6 +18,12 @@ function InteractiveErrors.highlight(source::String)
         print(io, O.Crayon(reset = true))
     end
     return String(take!(io))
+end
+
+PrecompileTools.@compile_workload begin
+    InteractiveErrors.highlight(
+        read(joinpath(@__DIR__, "..", "src", "InteractiveErrors.jl"), String),
+    )
 end
 
 end
