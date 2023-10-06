@@ -10,7 +10,6 @@ IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 PackageExtensionCompat = "65ce6f38-6b18-4e1d-a461-8949797d7930"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [weakdeps]
 Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f"
