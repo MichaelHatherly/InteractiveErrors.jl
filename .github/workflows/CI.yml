@@ -15,6 +15,13 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
+  finalize:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
+        if: needs.test.result == 'failure' || needs.test.result == 'skipped'
+
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
@@ -23,7 +30,6 @@ jobs:
       matrix:
         version:
           - "1.6"
-          - "1.8"
           - "1.9"
           - "nightly"
         os:
