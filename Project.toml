@@ -8,14 +8,29 @@ AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 FoldingTrees = "1eca21be-9b9b-4ed8-839a-6d8ae26b1781"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+PackageExtensionCompat = "65ce6f38-6b18-4e1d-a461-8949797d7930"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+
+[weakdeps]
+Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f"
+Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+OhMyREPL = "5fb14364-9ced-5910-84b2-373655c76a03"
+
+[extensions]
+InteractiveErrorsCthulhuExt = "Cthulhu"
+InteractiveErrorsDebuggerExt = "Debugger"
+InteractiveErrorsJETExt = "JET"
+InteractiveErrorsJuliaFormatterExt = "JuliaFormatter"
+InteractiveErrorsOhMyREPLExt = "OhMyREPL"
 
 [compat]
 AbstractTrees = "0.3, 0.4"
 FoldingTrees = "1.1"
 IterTools = "1"
-Requires = "1"
+PackageExtensionCompat = "1"
 julia = "1.6"
 
 [extras]

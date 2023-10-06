@@ -2,7 +2,9 @@ module InteractiveErrors
 
 using FoldingTrees
 
-using REPL, REPL.TerminalMenus, InteractiveUtils, IterTools, Requires
+using REPL, REPL.TerminalMenus, InteractiveUtils, IterTools
+
+import PackageExtensionCompat
 
 export toggle, current_theme, set_theme!, reset_theme!, adjust_theme!
 
@@ -361,7 +363,7 @@ end
 
 
 #
-# Requires.
+# Extensions, these get extended in the `/ext` modules.
 #
 
 has_cthulhu(args...) = false
@@ -380,62 +382,13 @@ format_julia_source(source) = source
 has_ohmyrepl(args...) = false
 highlight(source) = style(source, :file_contents)
 
-function requires()
-    @require Cthulhu = "f68482b8-f384-11e8-15f7-abe071a5a75f" begin
-        has_cthulhu() = true
-        ascend(mi::Core.MethodInstance) = Cthulhu.ascend(mi)
-        descend(mi::Core.MethodInstance) = Cthulhu.descend(mi)
-    end
-    @require Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438" begin
-        has_debugger() = true
-        breakpoint(file::AbstractString, line::Integer) = Debugger.breakpoint(file, line)
-    end
-    @require JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b" begin
-        has_jet() = true
-        function report_call(mi::Core.MethodInstance)
-            func = Base.tuple_type_head(mi.specTypes).instance
-            sig = Base.tuple_type_tail(mi.specTypes)
-            result = JET.report_call(func, sig)
-            @info "Press return to continue."
-            readline()
-            return result
-        end
-    end
-    @require JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899" begin
-        has_juliaformatter() = true
-        format_julia_source(source::String) =
-            try
-                JuliaFormatter.format_text(source)
-            catch err
-                source
-            end
-    end
-    @require OhMyREPL = "5fb14364-9ced-5910-84b2-373655c76a03" begin
-        has_ohmyrepl() = true
-        function highlight(source::String)
-            O = OhMyREPL
-            tokens = collect(O.tokenize(source))
-            crayons = fill(O.Crayon(), length(tokens))
-            O.Passes.SyntaxHighlighter.SYNTAX_HIGHLIGHTER_SETTINGS(crayons, tokens, 0, source)
-            io = IOBuffer()
-            for (token, crayon) in zip(tokens, crayons)
-                print(io, crayon)
-                print(io, O.untokenize(token, source))
-                print(io, O.Crayon(reset = true))
-            end
-            return String(take!(io))
-        end
-    end
-end
-
-
 #
 # Module Initialisation.
 #
 
 function __init__()
     setup_repl()
-    requires()
+    PackageExtensionCompat.@require_extensions
 end
 
 end # module
