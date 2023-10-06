@@ -12,25 +12,25 @@ export toggle, current_theme, set_theme!, reset_theme!, adjust_theme!
 #
 
 const DEFAULT_THEME = (
-    function_name   = (bold = true,),
-    directory       = (color = :light_black,),
-    filename        = (color = :magenta, bold = true,),
-    line_number     = (color = :green, bold = true),
-    user_stack      = (color = :green, bold = true),
-    system_stack    = (color = :red, bold = true),
-    stdlib_module   = (color = :yellow,),
-    base_module     = (color = :blue,),
-    core_module     = (color = :light_black,),
-    package_module  = (color = :cyan, bold = true,),
-    unknown_module  = (color = :red,),
-    inlined_frames  = (color = :light_black,),
+    function_name = (bold = true,),
+    directory = (color = :light_black,),
+    filename = (color = :magenta, bold = true),
+    line_number = (color = :green, bold = true),
+    user_stack = (color = :green, bold = true),
+    system_stack = (color = :red, bold = true),
+    stdlib_module = (color = :yellow,),
+    base_module = (color = :blue,),
+    core_module = (color = :light_black,),
+    package_module = (color = :cyan, bold = true),
+    unknown_module = (color = :red,),
+    inlined_frames = (color = :light_black,),
     toplevel_frames = (color = :light_black,),
     repeated_frames = (color = :red,),
-    file_contents   = (color = :light_black,),
-    signature       = (color = :light_black, format = true, highlight = true),
-    source          = (color = :normal, bold = true, highlight = true),
-    line_range      = (before = 0, after = 5,),
-    charset         = :unicode,
+    file_contents = (color = :light_black,),
+    signature = (color = :light_black, format = true, highlight = true),
+    source = (color = :normal, bold = true, highlight = true),
+    line_range = (before = 0, after = 5),
+    charset = :unicode,
 )
 const THEME = Ref{Any}(DEFAULT_THEME)
 
@@ -49,11 +49,7 @@ get_theme(key, default) = get(current_theme(), key, default)
 
 function style(str; kws...)
     sprint(; context = :color => true) do io
-        printstyled(
-            io, str;
-            bold = get(kws, :bold, false),
-            color = get(kws, :color, :normal),
-        )
+        printstyled(io, str; bold = get(kws, :bold, false), color = get(kws, :color, :normal))
     end
 end
 style(str, key::Symbol) = style(str; get_theme(key)...)
@@ -99,8 +95,8 @@ end
 #
 
 struct CapturedError
-    err
-    bt
+    err::Any
+    bt::Any
 end
 
 Base.show(io::IO, ce::CapturedError) = showerror(io, ce.err, ce.bt)
@@ -132,13 +128,13 @@ function explore(io::IO, err::CapturedError; interactive = true)
                 end
             else
                 name =
-                    m === :inlined    ? style("[inlined]", :inlined_frames) :
-                    m === :toplevel   ? style("[top-level]", :toplevel_frames) :
+                    m === :inlined ? style("[inlined]", :inlined_frames) :
+                    m === :toplevel ? style("[top-level]", :toplevel_frames) :
                     is_from_stdlib(m) ? style("$(m)", :stdlib_module) :
-                    is_from_base(m)   ? style("$(m)", :base_module) :
-                    is_from_core(m)   ? style("$(m)", :core_module) :
+                    is_from_base(m) ? style("$(m)", :base_module) :
+                    is_from_core(m) ? style("$(m)", :core_module) :
                     is_from_package(m) ? style("$(m)", :package_module) :
-                        style("$(m)", :unknown_module)
+                    style("$(m)", :unknown_module)
 
                 node = Node{Any}(name, root_node)
                 for frame in frame_group
@@ -167,7 +163,11 @@ function explore(io::IO, err::CapturedError; interactive = true)
                     end
                 end
                 # Hide any of the following by default:
-                if m in (:inlined, :toplevel) || is_from_stdlib(m) || is_from_base(m) || is_from_core(m) || fold
+                if m in (:inlined, :toplevel) ||
+                   is_from_stdlib(m) ||
+                   is_from_base(m) ||
+                   is_from_core(m) ||
+                   fold
                     fold!(node)
                 end
                 # Always open up the very first node, unless it's a toplevel.
@@ -190,11 +190,12 @@ function explore(io::IO, err::CapturedError; interactive = true)
     result === nothing && return
 
     actions = [
-        "clipboard"  => () -> (maybe_clipboard(sprint(showerror, err.err, err.bt[1:toplevel])); nothing),
-        "print"      => () -> (showerror(io, err.err, err.bt[1:toplevel]); nothing),
+        "clipboard" =>
+            () -> (maybe_clipboard(sprint(showerror, err.err, err.bt[1:toplevel])); nothing),
+        "print" => () -> (showerror(io, err.err, err.bt[1:toplevel]); nothing),
         "stacktrace" => () -> clean,
-        "exception"  => () -> err.err,
-        "backtrace"  => () -> err.bt,
+        "exception" => () -> err.err,
+        "backtrace" => () -> err.bt,
     ]
 
     data = result.data
@@ -204,10 +205,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
         file = find_source(file)
         if file !== nothing && isfile(file)
             file, line
-            extras = [
-                "edit" => () -> (edit(file, line); nothing),
-                "retry" => () -> true,
-            ]
+            extras = ["edit" => () -> (edit(file, line); nothing), "retry" => () -> true]
             has_debugger() && push!(extras, "breakpoint" => () -> breakpoint(file, line))
             push!(extras, "less" => () -> (less(file, line); nothing))
             actions = vcat(extras, actions)
@@ -228,7 +226,10 @@ function explore(io::IO, err::CapturedError; interactive = true)
         end
     end
 
-    result = interactive ? request(MultiSelectMenu(first.(actions); charset = get_theme(:charset, :unicode))) : collect(1:length(actions))
+    result =
+        interactive ?
+        request(MultiSelectMenu(first.(actions); charset = get_theme(:charset, :unicode))) :
+        collect(1:length(actions))
     choice = sort(collect(result))
     if !isempty(choice)
         output = []
@@ -249,7 +250,9 @@ function _lines_around(s::StackFrameWrapper)
         range = get_theme(:line_range)
         above = max(1, line - get(range, :before, 0))
         below = min(line + get(range, :after, 5), length(lines))
-        highlighter = get(get_theme(:source), :highlight, true) === true ? highlight : s -> style(s, :file_contents)
+        highlighter =
+            get(get_theme(:source), :highlight, true) === true ? highlight :
+            s -> style(s, :file_contents)
         return highlighter.(lines[above:below])
     else
         return String[]
@@ -260,7 +263,9 @@ function _formatted_signature(s::StackFrameWrapper)
     str = String(rsplit(string(s.sf), " at "; limit = 2)[1])
     str = replace(str, "#unused#" => "")
     formatter = get(get_theme(:signature), :format, true) === true ? format_julia_source : identity
-    highlighter = get(get_theme(:signature), :highlight, true) === true ? highlight : s -> style(s, :file_contents)
+    highlighter =
+        get(get_theme(:signature), :highlight, true) === true ? highlight :
+        s -> style(s, :file_contents)
     fmt = highlighter(formatter(str))
     return collect(eachline(IOBuffer(fmt)))
 end
@@ -287,8 +292,7 @@ is_from_package(m) = (r = rootmodule(m); !is_from_core(r) && !is_from_base(r) &&
 module_of(sf) =
     sf.sf.inlined ? :inlined :
     sf.sf.func === Symbol("top-level scope") ? :toplevel :
-    isa(sf.sf.linfo, Core.MethodInstance) ? sf.sf.linfo.def.module :
-        :unknown
+    isa(sf.sf.linfo, Core.MethodInstance) ? sf.sf.linfo.def.module : :unknown
 
 aggregate_modules(stacktrace) = IterTools.groupby(module_of, stacktrace)
 
@@ -326,7 +330,10 @@ function wrap_errors(expr)
             try
                 $(Expr(:toplevel, expr))
             catch e
-                $(maybe_retry)($(explore)(($CapturedError)(e, catch_backtrace())), $(Expr(:quote, expr)))
+                $(maybe_retry)(
+                    $(explore)(($CapturedError)(e, catch_backtrace())),
+                    $(Expr(:quote, expr)),
+                )
             end
         end
     else
@@ -337,7 +344,7 @@ end
 function setup_repl()
     @async begin
         done = false
-        for _ in 1:10
+        for _ = 1:10
             if isdefined(Base, :active_repl_backend)
                 backend = Base.active_repl_backend
                 if isdefined(backend, :ast_transforms)
@@ -396,7 +403,12 @@ function requires()
     end
     @require JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899" begin
         has_juliaformatter() = true
-        format_julia_source(source::String) = try JuliaFormatter.format_text(source); catch err; source; end
+        format_julia_source(source::String) =
+            try
+                JuliaFormatter.format_text(source)
+            catch err
+                source
+            end
     end
     @require OhMyREPL = "5fb14364-9ced-5910-84b2-373655c76a03" begin
         has_ohmyrepl() = true
@@ -404,11 +416,11 @@ function requires()
             O = OhMyREPL
             tokens = collect(O.tokenize(source))
             crayons = fill(O.Crayon(), length(tokens))
-            O.Passes.SyntaxHighlighter.SYNTAX_HIGHLIGHTER_SETTINGS(crayons, tokens, 0)
+            O.Passes.SyntaxHighlighter.SYNTAX_HIGHLIGHTER_SETTINGS(crayons, tokens, 0, source)
             io = IOBuffer()
             for (token, crayon) in zip(tokens, crayons)
                 print(io, crayon)
-                print(io, O.untokenize(token))
+                print(io, O.untokenize(token, source))
                 print(io, O.Crayon(reset = true))
             end
             return String(take!(io))
