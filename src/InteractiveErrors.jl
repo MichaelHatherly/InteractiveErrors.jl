@@ -344,6 +344,9 @@ function wrap_errors(expr)
 end
 
 function setup_repl()
+    # Skip REPL setup if we are precompiling. Avoids warnings in precompilation.
+    ccall(:jl_generating_output, Cint, ()) == 1 && return nothing
+
     @async begin
         done = false
         for _ = 1:10
