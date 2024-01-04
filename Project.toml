@@ -1,7 +1,7 @@
 name = "InteractiveErrors"
 uuid = "6cff3a6f-7015-4b3b-b269-4b312a73b9bf"
 authors = ["Michael Hatherly <michaelhatherly@gmail.com>"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 FoldingTrees = "1eca21be-9b9b-4ed8-839a-6d8ae26b1781"
