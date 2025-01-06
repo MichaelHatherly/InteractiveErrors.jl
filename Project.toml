@@ -26,6 +26,7 @@ InteractiveErrorsJuliaFormatterExt = "JuliaFormatter"
 InteractiveErrorsOhMyREPLExt = "OhMyREPL"
 
 [compat]
+Cthulhu = "2"
 FoldingTrees = "1.1"
 IterTools = "1"
 PackageExtensionCompat = "1"
