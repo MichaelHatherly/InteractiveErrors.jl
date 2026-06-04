@@ -50,7 +50,7 @@ get_theme(key) = get(NamedTuple, current_theme(), key)
 get_theme(key, default) = get(current_theme(), key, default)
 
 function style(str; kws...)
-    sprint(; context = :color => true) do io
+    return sprint(; context = :color => true) do io
         printstyled(io, str; bold = get(kws, :bold, false), color = get(kws, :color, :normal))
     end
 end
@@ -75,7 +75,7 @@ function Base.show(io::IO, s::StackFrameWrapper)
     dir = style(joinpath(dir, ""), :directory)
     line = style(s.sf.line, :line_number)
     repeated = s.n > 1 ? style("x $(s.n)", :repeated_frames) : ""
-    print(io, strip("$func $dir$file:$line $repeated"))
+    return print(io, strip("$func $dir$file:$line $repeated"))
 end
 
 function rewrite_path(path)
@@ -117,7 +117,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
     toplevel = findfirst(s -> StackTraces.is_top_level_frame(s.sf), wrapped)
     toplevel = toplevel === nothing ? length(wrapped) : toplevel
     user_frames = wrapped[1:toplevel]
-    system_frames = wrapped[toplevel+1:end]
+    system_frames = wrapped[(toplevel + 1):end]
 
     root = Node{Any}("(stacktrace)")
 
@@ -166,10 +166,10 @@ function explore(io::IO, err::CapturedError; interactive = true)
                 end
                 # Hide any of the following by default:
                 if m in (:inlined, :toplevel) ||
-                   is_from_stdlib(m) ||
-                   is_from_base(m) ||
-                   is_from_core(m) ||
-                   fold
+                        is_from_stdlib(m) ||
+                        is_from_base(m) ||
+                        is_from_core(m) ||
+                        fold
                     fold!(node)
                 end
                 # Always open up the very first node, unless it's a toplevel.
@@ -178,6 +178,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
                 end
             end
         end
+        return
     end
 
     user_nodes = Node{Any}(style("(user)", :user_stack), root)
@@ -274,7 +275,7 @@ end
 
 # Just give up when there is no clipboard available.
 function maybe_clipboard(str)
-    try
+    return try
         clipboard(str)
     catch err
         @warn "Could not find a clipboard."
@@ -327,7 +328,7 @@ function _ast_transforms(ast)
 end
 
 function wrap_errors(expr)
-    if ENABLED[] && !is_toggle_expr(expr)
+    return if ENABLED[] && !is_toggle_expr(expr)
         quote
             try
                 $(Expr(:toplevel, expr))
@@ -347,9 +348,9 @@ function setup_repl()
     # Skip REPL setup if we are precompiling. Avoids warnings in precompilation.
     ccall(:jl_generating_output, Cint, ()) == 1 && return nothing
 
-    @async begin
+    return @async begin
         done = false
-        for _ = 1:10
+        for _ in 1:10
             if isdefined(Base, :active_repl_backend)
                 backend = Base.active_repl_backend
                 if isdefined(backend, :ast_transforms)
@@ -391,7 +392,7 @@ highlight(source) = style(source, :file_contents)
 
 function __init__()
     setup_repl()
-    PackageExtensionCompat.@require_extensions
+    return PackageExtensionCompat.@require_extensions
 end
 
 PrecompileTools.@compile_workload begin

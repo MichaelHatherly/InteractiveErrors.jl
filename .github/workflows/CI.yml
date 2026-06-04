@@ -16,11 +16,34 @@ concurrency:
 
 jobs:
   finalize:
-    needs: [test]
+    needs: [format, test]
     runs-on: ubuntu-latest
     steps:
       - run: exit 1
-        if: needs.test.result == 'failure' || needs.test.result == 'skipped'
+        if: |
+          needs.format.result == 'failure' || needs.format.result == 'skipped' ||
+          needs.test.result == 'failure' || needs.test.result == 'skipped'
+
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - name: Install runic
+        run: |
+          julia --project=@runic --startup-file=no -e 'using Pkg; Pkg.add("Runic")'
+          cat > runic <<'SCRIPT'
+          #!/bin/sh
+          export JULIA_LOAD_PATH="@runic"
+          exec julia --startup-file=no -e 'using Runic; exit(Runic.main(ARGS))' -- "$@"
+          SCRIPT
+          chmod +x runic
+          echo "$PWD" >> "$GITHUB_PATH"
+      - run: just fmt-check
 
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
