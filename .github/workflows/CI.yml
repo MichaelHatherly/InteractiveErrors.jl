@@ -70,6 +70,8 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+          # macOS runners are arm64; run x64 Julia under Rosetta, which 1.6 needs.
+          force-arch: true
 
       - uses: actions/cache@v4
         env:
