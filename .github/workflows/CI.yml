@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
       - uses: taiki-e/install-action@v2
         with:
           tool: just
@@ -66,10 +66,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+          # macOS runners are arm64; run x64 Julia under Rosetta, which 1.6 needs.
+          force-arch: true
 
       - uses: actions/cache@v4
         env:
