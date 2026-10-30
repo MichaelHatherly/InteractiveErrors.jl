@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Support Julia 1.12 and 1.13, and OhMyREPL 0.6 syntax highlighting [#43]
+
 ## [v1.0.1] - 2024-01-04
 
 ### Fixed
@@ -96,3 +100,4 @@ Initial release.
 [#24]: https://github.com/MichaelHatherly/InteractiveErrors.jl/issues/24
 [#25]: https://github.com/MichaelHatherly/InteractiveErrors.jl/issues/25
 [#28]: https://github.com/MichaelHatherly/InteractiveErrors.jl/issues/28
+[#43]: https://github.com/MichaelHatherly/InteractiveErrors.jl/issues/43

@@ -111,7 +111,7 @@ function explore(io::IO, err::CapturedError; interactive = true)
     println(io, sprint(showerror, err.err, context = :color => true))
 
     # Use the default cleaning functionality from Base. No need to reinvent.
-    clean = Base.process_backtrace(err.bt)
+    clean = Base.process_backtrace(stacktrace(err.bt))
     wrapped = StackFrameWrapper.(clean)
 
     toplevel = findfirst(s -> StackTraces.is_top_level_frame(s.sf), wrapped)
@@ -319,7 +319,8 @@ is_retry(nt::NamedTuple) = haskey(nt, :retry) && nt.retry === true
 maybe_retry(out, expr) = is_retry(out) ? Core.eval(Main, _ast_transforms(expr)) : out
 
 function _ast_transforms(ast)
-    if isdefined(Base, :active_repl_backend)
+    # Julia 1.12+ defines `active_repl_backend` as `nothing` outside a REPL.
+    if isdefined(Base, :active_repl_backend) && Base.active_repl_backend !== nothing
         for xf in Base.active_repl_backend.ast_transforms
             ast = Base.invokelatest(xf, ast)
         end

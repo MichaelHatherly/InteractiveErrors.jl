@@ -71,6 +71,11 @@ using Test, InteractiveErrors
     @test IE.has_ohmyrepl()
     @test IE.has_juliaformatter()
 
+    source = "f(x) = x + 1"
+    highlighted = IE.highlight(source)
+    @test highlighted != IE.style(source, :file_contents)
+    @test replace(highlighted, r"\e\[[0-9;]*m" => "") == source
+
     try
         sqrt(-1)
     catch err
