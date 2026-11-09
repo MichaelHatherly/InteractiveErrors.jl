@@ -8,3 +8,12 @@ updates:
       - "dependencies"
       - "github-actions"
     open-pull-requests-limit: 1
+  - package-ecosystem: "julia"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+      - "julia"
+    cooldown:
+      default-days: 7
